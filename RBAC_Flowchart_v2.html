@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RBAC Architecture — SAR Narrative Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:          #080c14;
+  --surface:     #0d1520;
+  --surface2:    #111c2e;
+  --border:      #1e3050;
+  --border2:     #243a5e;
+  --gold:        #c8a84b;
+  --gold-light:  #e8c96a;
+  --gold-dim:    rgba(200,168,75,0.12);
+  --teal:        #2de4c7;
+  --teal-dim:    rgba(45,228,199,0.10);
+  --red:         #e05a5a;
+  --red-dim:     rgba(224,90,90,0.10);
+  --blue:        #4a9eff;
+  --blue-dim:    rgba(74,158,255,0.10);
+  --purple:      #9d7dff;
+  --purple-dim:  rgba(157,125,255,0.10);
+  --green:       #3dd68c;
+  --orange:      #f0935a;
+  --text:        #d4e4f7;
+  --text-dim:    #6e8aaa;
+  --text-muted:  #3d5a7a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);
+  font-family:'Syne',sans-serif;
+  color:var(--text);
+  padding:56px 52px 72px;
+  min-height:100vh;
+}
+
+/* ─── PAGE HEADER ────────────────────────────────── */
+.page-header{text-align:center;margin-bottom:60px;}
+.page-header .badge{
+  display:inline-block;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.25em;
+  color:var(--gold);
+  border:1px solid rgba(200,168,75,.35);
+  padding:4px 12px;
+  border-radius:3px;
+  margin-bottom:18px;
+  text-transform:uppercase;
+}
+.page-header h1{
+  font-size:28px;
+  font-weight:800;
+  letter-spacing:.03em;
+  background:linear-gradient(120deg,#c8a84b 0%,#e8c96a 40%,#4a9eff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:8px;
+}
+.page-header .sub{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:var(--text-dim);
+  letter-spacing:.07em;
+}
+
+/* ─── SECTION LABEL ─────────────────────────────── */
+.section{margin-bottom:52px;}
+.section-label{
+  display:flex;align-items:center;gap:14px;margin-bottom:28px;
+}
+.section-label .num{
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;
+  color:var(--gold);border:1px solid var(--gold);padding:3px 8px;border-radius:3px;
+  white-space:nowrap;
+}
+.section-label h2{font-size:14px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;}
+.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,var(--border2),transparent);}
+
+/* ─── AUTH FLOW ──────────────────────────────────── */
+.auth-row{
+  display:flex;align-items:center;gap:0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:28px 28px;
+  overflow:hidden;
+  position:relative;
+}
+.auth-row::before{
+  content:'';position:absolute;inset:0;border-radius:14px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(200,168,75,.06) 0%,transparent 60%);
+}
+
+.auth-step{
+  flex:1;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;
+  padding:0 10px;
+  position:relative;
+}
+.auth-step .icon{font-size:24px;margin-bottom:8px;}
+.auth-step .step-tag{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;
+  text-transform:uppercase;margin-bottom:5px;
+}
+.auth-step .step-title{font-size:13px;font-weight:700;margin-bottom:4px;line-height:1.3;}
+.auth-step .step-desc{
+  font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);line-height:1.6;
+}
+
+.auth-arrow{
+  flex-shrink:0;
+  display:flex;align-items:center;
+  padding:0 4px;
+}
+.auth-arrow svg{width:32px;height:16px;}
+
+/* ─── ROLE CARDS ─────────────────────────────────── */
+.roles-row{display:flex;gap:16px;}
+
+.role-card{
+  flex:1;border-radius:14px;overflow:hidden;
+  border:1px solid var(--border);
+  background:var(--surface);
+  position:relative;
+}
+/* Gradient top accent bar */
+.role-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent);
+}
+.role-header{
+  padding:20px 22px 16px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,var(--accent-dim) 0%,transparent 70%);
+}
+.role-header .rh-tag{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.2em;
+  color:var(--accent);text-transform:uppercase;margin-bottom:6px;
+}
+.role-header .rh-title{font-size:16px;font-weight:800;letter-spacing:.04em;margin-bottom:3px;}
+.role-header .rh-sub{
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);
+}
+
+.role-body{padding:20px 22px;}
+
+.perm-label{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;
+}
+.perm-item{
+  display:flex;align-items:flex-start;gap:8px;
+  margin-bottom:9px;
+}
+.perm-item .pi-icon{
+  font-size:12px;font-weight:700;margin-top:1px;flex-shrink:0;
+  font-family:'DM Mono',monospace;
+}
+.perm-item .pi-text{font-size:12px;color:var(--text);line-height:1.5;}
+.perm-item.deny .pi-text{color:var(--text-dim);}
+
+.perm-divider{
+  border:none;border-top:1px solid var(--border);
+  margin:14px 0;
+}
+
+/* ─── DATA LAYER ─────────────────────────────────── */
+.data-row{display:flex;gap:12px;}
+
+.data-card{
+  flex:1;border-radius:12px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  padding:18px 16px;
+  position:relative;
+  overflow:hidden;
+}
+.data-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--accent);
+}
+.data-card::after{
+  content:'';position:absolute;inset:0;border-radius:12px;pointer-events:none;
+  background:linear-gradient(135deg,var(--accent-dim) 0%,transparent 55%);
+}
+.data-card .dc-icon{font-size:22px;margin-bottom:10px;}
+.data-card .dc-title{
+  font-size:12px;font-weight:700;margin-bottom:3px;letter-spacing:.02em;
+  color:var(--accent);
+}
+.data-card .dc-sub{
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);
+  margin-bottom:12px;line-height:1.5;
+}
+.data-card .dc-badge{
+  display:inline-block;
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;
+  color:var(--accent);border:1px solid var(--accent);
+  padding:3px 8px;border-radius:3px;
+  opacity:.85;
+}
+
+/* ─── AUDIT FOOTER BAR ───────────────────────────── */
+.audit-bar{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:18px 28px;
+  display:flex;align-items:center;gap:20px;
+  margin-top:52px;
+  position:relative;overflow:hidden;
+}
+.audit-bar::before{
+  content:'';position:absolute;inset:0;border-radius:12px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(45,228,199,.06) 0%,transparent 60%);
+}
+.audit-bar::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(to right,var(--teal),var(--blue),var(--purple));
+}
+.ab-icon{font-size:28px;flex-shrink:0;}
+.ab-content{}
+.ab-title{font-size:14px;font-weight:700;color:var(--teal);letter-spacing:.04em;margin-bottom:4px;}
+.ab-desc{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);line-height:1.7;}
+.ab-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.ab-pill{
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;
+  padding:3px 10px;border-radius:3px;border:1px solid;
+}
+
+/* ─── FOOTER ─────────────────────────────────────── */
+.page-footer{
+  margin-top:56px;text-align:center;
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);
+  letter-spacing:.08em;border-top:1px solid var(--border);padding-top:20px;
+}
+.page-footer span{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<!-- ═══ PAGE HEADER ═══════════════════════════════════ -->
+<div class="page-header">
+  <div class="badge">SAR Narrative Generator — System Architecture</div>
+  <h1>ROLE-BASED ACCESS CONTROL (RBAC)</h1>
+  <div class="sub">Authentication · Authorisation · Data Compartmentalisation · Audit</div>
+</div>
+
+
+<!-- ═══ SECTION 1: AUTH FLOW ═══════════════════════════ -->
+<div class="section">
+  <div class="section-label">
+    <div class="num">01</div>
+    <h2 style="color:var(--gold);">Authentication Flow</h2>
+  </div>
+
+  <div class="auth-row">
+
+    <div class="auth-step">
+      <div class="icon">🔐</div>
+      <div class="step-tag" style="color:var(--gold);">Entry Point</div>
+      <div class="step-title" style="color:var(--gold-light);">SSO Login<br>+ MFA</div>
+      <div class="step-desc">Barclays enterprise<br>SSO — credentials<br>never stored locally</div>
+    </div>
+
+    <div class="auth-arrow">
+      <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="8" x2="24" y2="8" stroke="#c8a84b" stroke-width="1.5"/>
+        <polygon points="24,4 32,8 24,12" fill="#c8a84b"/>
+      </svg>
+    </div>
+
+    <div class="auth-step">
+      <div class="icon">🏛️</div>
+      <div class="step-tag" style="color:var(--blue);">IdP</div>
+      <div class="step-title" style="color:var(--blue);">Identity<br>Provider</div>
+      <div class="step-desc">Validates user<br>against Barclays<br>directory</div>
+    </div>
+
+    <div class="auth-arrow">
+      <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="8" x2="24" y2="8" stroke="#4a9eff" stroke-width="1.5"/>
+        <polygon points="24,4 32,8 24,12" fill="#4a9eff"/>
+      </svg>
+    </div>
+
+    <div class="auth-step">
+      <div class="icon">🎫</div>
+      <div class="step-tag" style="color:var(--purple);">Token</div>
+      <div class="step-title" style="color:var(--purple);">JWT Token<br><span style="font-size:11px;">(Role Claim)</span></div>
+      <div class="step-desc">Signed JWT with<br>role claim embedded;<br>8-hour expiry</div>
+    </div>
+
+    <div class="auth-arrow">
+      <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="8" x2="24" y2="8" stroke="#9d7dff" stroke-width="1.5"/>
+        <polygon points="24,4 32,8 24,12" fill="#9d7dff"/>
+      </svg>
+    </div>
+
+    <div class="auth-step">
+      <div class="icon">🛡️</div>
+      <div class="step-tag" style="color:var(--teal);">Validation</div>
+      <div class="step-title" style="color:var(--teal);">FastAPI<br>Middleware</div>
+      <div class="step-desc">Validates JWT on<br>every request —<br>server-side only</div>
+    </div>
+
+    <div class="auth-arrow">
+      <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="8" x2="24" y2="8" stroke="#2de4c7" stroke-width="1.5"/>
+        <polygon points="24,4 32,8 24,12" fill="#2de4c7"/>
+      </svg>
+    </div>
+
+    <div class="auth-step">
+      <div class="icon">🖥️</div>
+      <div class="step-tag" style="color:var(--green);">Access</div>
+      <div class="step-title" style="color:var(--green);">Role-Scoped<br>Dashboard</div>
+      <div class="step-desc">User sees only<br>their permitted<br>views &amp; data</div>
+    </div>
+
+    <div class="auth-arrow">
+      <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="8" x2="24" y2="8" stroke="#3dd68c" stroke-width="1.5"/>
+        <polygon points="24,4 32,8 24,12" fill="#3dd68c"/>
+      </svg>
+    </div>
+
+    <div class="auth-step">
+      <div class="icon">📋</div>
+      <div class="step-tag" style="color:var(--orange);">Audit</div>
+      <div class="step-title" style="color:var(--orange);">LangGraph<br>Audit Log</div>
+      <div class="step-desc">All access logged;<br>tamper-proof;<br>append-only</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══ SECTION 2: ROLE CARDS ══════════════════════════ -->
+<div class="section">
+  <div class="section-label">
+    <div class="num">02</div>
+    <h2 style="color:var(--blue);">User Roles &amp; Permissions</h2>
+  </div>
+
+  <div class="roles-row">
+
+    <!-- ANALYST -->
+    <div class="role-card" style="--accent:var(--blue);--accent-dim:var(--blue-dim);">
+      <div class="role-header">
+        <div class="rh-tag">Operational Tier</div>
+        <div class="rh-title" style="color:var(--blue);">ANALYST</div>
+        <div class="rh-sub">FIU Investigator · BA4</div>
+      </div>
+      <div class="role-body">
+        <div class="perm-label">Permissions</div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Pull Neo4j subgraphs for assigned cases</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Review &amp; edit Drafter Agent SAR narratives</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Interact with Neo4j graph visualiser to verify evidence</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Submit SAR draft to Supervisor for review</div>
+        </div>
+        <hr class="perm-divider"/>
+        <div class="perm-label">Restrictions</div>
+        <div class="perm-item deny">
+          <div class="pi-icon" style="color:var(--red);">✗</div>
+          <div class="pi-text">Cannot approve their own SARs for final filing</div>
+        </div>
+        <div class="perm-item deny">
+          <div class="pi-icon" style="color:var(--red);">✗</div>
+          <div class="pi-text">Cannot edit or delete the immutable Audit Trail</div>
+        </div>
+        <div class="perm-item deny">
+          <div class="pi-icon" style="color:var(--red);">✗</div>
+          <div class="pi-text">Cannot view raw unmasked PII data</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUPERVISOR -->
+    <div class="role-card" style="--accent:var(--teal);--accent-dim:var(--teal-dim);">
+      <div class="role-header">
+        <div class="rh-tag">Governance &amp; Orchestration Tier</div>
+        <div class="rh-title" style="color:var(--teal);">SUPERVISOR</div>
+        <div class="rh-sub">Quality Assurance · AVP / VP</div>
+      </div>
+      <div class="role-body">
+        <div class="perm-label">Permissions</div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Full visibility into the Risk-Based Dynamic Case Queue</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Final authority to Approve or Reject SAR drafts</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Manually reassign cases and override Priority Score</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Review Auditor Agent quality scores and flags</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Global view: all subgraphs, audit trails &amp; drafts</div>
+        </div>
+        <hr class="perm-divider"/>
+        <div class="perm-label">Restrictions</div>
+        <div class="perm-item deny">
+          <div class="pi-icon" style="color:var(--red);">✗</div>
+          <div class="pi-text">Does not perform initial investigation — governance only</div>
+        </div>
+        <div class="perm-item deny">
+          <div class="pi-icon" style="color:var(--red);">✗</div>
+          <div class="pi-text">Cannot modify system configuration or manage users</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IT ADMIN -->
+    <div class="role-card" style="--accent:var(--red);--accent-dim:var(--red-dim);">
+      <div class="role-header">
+        <div class="rh-tag">Infrastructure Tier</div>
+        <div class="rh-title" style="color:var(--red);">IT ADMIN</div>
+        <div class="rh-sub">System Architect · IT / Sec</div>
+      </div>
+      <div class="role-body">
+        <div class="perm-label">Permissions</div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Manage user access, role assignments &amp; onboarding</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Configure Risk Score thresholds and Aging Mechanism formulas</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Monitor Azure Red Hat OpenShift (ARO) &amp; Neo4j health</div>
+        </div>
+        <div class="perm-item">
+          <div class="pi-icon" style="color:var(--green);">✓</div>
+          <div class="pi-text">Scale Investigator, Drafter &amp; Auditor microservices on ARO</div>
+        </div>
+        <hr class="perm-divider"/>
+        <div class="perm-label">Restrictions</div>
+        <div class="perm-item deny">
+          <div class="pi-icon" style="color:var(--red);">✗</div>
+          <div class="pi-text">Strictly prohibited from viewing any PII data</div>
+        </div>
+        <div class="perm-item deny">
+          <div class="pi-icon" style="color:var(--red);">✗</div>
+          <div class="pi-text">Cannot read or access SAR narrative content</div>
+        </div>
+        <div class="perm-item deny">
+          <div class="pi-icon" style="color:var(--red);">✗</div>
+          <div class="pi-text">Cannot approve, reject, or interact with SAR workflow</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══ SECTION 3: DATA LAYER ══════════════════════════ -->
+<div class="section">
+  <div class="section-label">
+    <div class="num">03</div>
+    <h2 style="color:var(--purple);">Data Layer Access Control</h2>
+    <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.15em;margin-left:-8px;">— Microsoft Presidio PII Masking</span>
+  </div>
+
+  <div class="data-row">
+
+    <div class="data-card" style="--accent:var(--gold);--accent-dim:var(--gold-dim);">
+      <div class="dc-icon">🗄️</div>
+      <div class="dc-title">Neo4j Graph DB</div>
+      <div class="dc-sub">Transaction Subgraphs<br>K-Hop Traversal Data</div>
+      <div class="dc-badge">Analyst + Supervisor</div>
+    </div>
+
+    <div class="data-card" style="--accent:var(--blue);--accent-dim:var(--blue-dim);">
+      <div class="dc-icon">🔍</div>
+      <div class="dc-title">Azure AI Search</div>
+      <div class="dc-sub">AML Typology Vectors<br>Regulatory Guidelines</div>
+      <div class="dc-badge">Agent Layer Only</div>
+    </div>
+
+    <div class="data-card" style="--accent:var(--teal);--accent-dim:var(--teal-dim);">
+      <div class="dc-icon">📜</div>
+      <div class="dc-title">LangGraph State</div>
+      <div class="dc-sub">Audit Trail / Full Log<br>Append-Only &amp; Tamper-Proof</div>
+      <div class="dc-badge">Supervisor + Admin (read)</div>
+    </div>
+
+    <div class="data-card" style="--accent:var(--red);--accent-dim:var(--red-dim);">
+      <div class="dc-icon">⚙️</div>
+      <div class="dc-title">ARO Infrastructure</div>
+      <div class="dc-sub">Microservice Metrics<br>OpenShift Cluster Health</div>
+      <div class="dc-badge">Admin Only</div>
+    </div>
+
+    <div class="data-card" style="--accent:var(--purple);--accent-dim:var(--purple-dim);">
+      <div class="dc-icon">📄</div>
+      <div class="dc-title">SAR Narrative</div>
+      <div class="dc-sub">Draft &amp; Filed Reports<br>PII Re-hydrated On-Premise</div>
+      <div class="dc-badge" style="display:block;margin-bottom:5px;">Analyst (draft)</div>
+      <div class="dc-badge">Supervisor (approve)</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══ AUDIT TRAIL BAR ════════════════════════════════ -->
+<div class="audit-bar">
+  <div class="ab-icon">🔒</div>
+  <div class="ab-content">
+    <div class="ab-title">IMMUTABLE AUDIT TRAIL — LANGRAPH DETERMINISTIC LOG</div>
+    <div class="ab-desc">Every access decision, agent action, SAR edit, approval and rejection is recorded in an append-only LangGraph state log. Role, timestamp, action and data node IDs are captured at each step. The log is cryptographically tamper-evident and cannot be modified by any role — including Admin.</div>
+    <div class="ab-pills">
+      <div class="ab-pill" style="color:var(--gold);border-color:rgba(200,168,75,.4);">Role + Timestamp on every record</div>
+      <div class="ab-pill" style="color:var(--teal);border-color:rgba(45,228,199,.4);">Node ID citation tracking</div>
+      <div class="ab-pill" style="color:var(--blue);border-color:rgba(74,158,255,.4);">Append-only — no deletion possible</div>
+      <div class="ab-pill" style="color:var(--purple);border-color:rgba(157,125,255,.4);">Regulator-exportable JSON Evidence File</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ PAGE FOOTER ════════════════════════════════════ -->
+<div class="page-footer">
+  Figure 3: RBAC Authentication Flow &amp; Permission Matrix &nbsp;·&nbsp;
+  <span>SAR Narrative Generator with Audit Trail</span>
+  &nbsp;·&nbsp; Vishwakarma Institute of Technology, Pune &nbsp;·&nbsp; 2025
+</div>
+
+</body>
+</html>
